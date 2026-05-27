@@ -389,6 +389,34 @@
       header h1 { font-size: 1.4rem; }
     }
 
+    /* ── 토토 프로필 카드 ── */
+    .toto-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, #FFF3E8, #FFF8F0);
+      border-radius: 14px;
+      border: 1.5px solid var(--primary-light);
+    }
+    .toto-avatar {
+      font-size: 2.4rem;
+      width: 56px; height: 56px;
+      background: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(224,123,57,0.2);
+      flex-shrink: 0;
+    }
+    .toto-name  { font-size: 1.3rem; font-weight: 800; color: var(--text); }
+    .toto-breed { font-size: 0.82rem; color: var(--text-light); margin-top: 2px; }
+    .toto-age-line {
+      font-size: 0.82rem;
+      color: var(--primary);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
     /* ── PWA 설치 배너 ── */
     #installBanner {
       position: fixed;
@@ -441,40 +469,26 @@
 <body>
 
 <header>
-  <h1>🐾 강아지 화식 레시피</h1>
-  <p>재료를 선택하면 맞춤 레시피와 칼로리를 알려드려요</p>
+  <h1>🐾 토토의 화식 레시피</h1>
+  <p>꼬똥드툴레아 토토를 위한 맞춤 화식 가이드</p>
 </header>
 
 <div class="container">
 
-  <!-- ① 강아지 프로필 -->
+  <!-- ① 토토 프로필 -->
   <div class="section">
-    <div class="section-title">🐶 강아지 정보</div>
-    <div class="profile-grid">
-      <div class="form-group">
-        <label>이름</label>
-        <input id="dogName" type="text" placeholder="예: 쫑이">
+    <div class="section-title">🐶 토토 프로필</div>
+    <div class="toto-card">
+      <div class="toto-avatar">🐾</div>
+      <div class="toto-info">
+        <div class="toto-name">토토</div>
+        <div class="toto-breed">꼬똥드툴레아 · 중성화 수컷</div>
+        <div class="toto-age-line" id="totoAgeLine"></div>
       </div>
-      <div class="form-group">
-        <label>몸무게 (kg)</label>
-        <input id="dogWeight" type="number" min="0.5" max="60" step="0.1" placeholder="예: 5.2">
-      </div>
-      <div class="form-group">
-        <label>나이</label>
-        <select id="dogAge">
-          <option value="puppy">강아지 (1세 미만)</option>
-          <option value="adult" selected>성견 (1~7세)</option>
-          <option value="senior">노령견 (7세 이상)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>중성화 여부 / 체형</label>
-        <select id="dogStatus">
-          <option value="neutered" selected>중성화 완료</option>
-          <option value="intact">미중성화</option>
-          <option value="overweight">체중 감량 필요</option>
-        </select>
-      </div>
+    </div>
+    <div class="form-group" style="margin-top:16px; max-width:220px;">
+      <label>오늘 몸무게 (kg)</label>
+      <input id="dogWeight" type="number" min="0.5" max="60" step="0.1" placeholder="예: 5.2">
     </div>
     <div id="kcalResult" class="calorie-result" style="display:none">
       <div style="font-size:0.83rem;font-weight:600;margin-bottom:3px;color:var(--text-light);">하루 권장 칼로리</div>
@@ -1015,56 +1029,71 @@ let curFilter = 'all';
 // ══════════════════════════════════════════════
 //  초기화
 // ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  토토 고정 정보
+// ══════════════════════════════════════════════
+const TOTO_BIRTHDAY = new Date('2020-09-17');
+
+function getTotoAge() {
+  const today = new Date();
+  let years  = today.getFullYear() - TOTO_BIRTHDAY.getFullYear();
+  let months = today.getMonth()    - TOTO_BIRTHDAY.getMonth();
+  if (months < 0) { years--; months += 12; }
+  if (today.getDate() < TOTO_BIRTHDAY.getDate()) months--;
+  if (months < 0)  { years--; months += 12; }
+  return { years, months };
+}
+
+function getTotoAgeCategory() {
+  const { years } = getTotoAge();
+  if (years < 1) return 'puppy';
+  if (years < 7) return 'adult';
+  return 'senior';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  // 나이 표시
+  const { years, months } = getTotoAge();
+  const cat = getTotoAgeCategory();
+  const catLabel = cat === 'puppy' ? '강아지' : cat === 'adult' ? '성견' : '노령견';
+  document.getElementById('totoAgeLine').textContent =
+    `만 ${years}세 ${months}개월 · ${catLabel}`;
+
   renderIngButtons();
   loadProfile();
-  ['dogWeight','dogAge','dogStatus'].forEach(id =>
-    document.getElementById(id).addEventListener('input', calcDailyKcal)
-  );
-  document.getElementById('dogName').addEventListener('input', saveProfile);
+  document.getElementById('dogWeight').addEventListener('input', calcDailyKcal);
 });
 
 // ══════════════════════════════════════════════
-//  강아지 프로필
+//  토토 프로필 (몸무게만 저장)
 // ══════════════════════════════════════════════
 function saveProfile() {
-  localStorage.setItem('dogProfile', JSON.stringify({
-    name:   document.getElementById('dogName').value,
-    weight: document.getElementById('dogWeight').value,
-    age:    document.getElementById('dogAge').value,
-    status: document.getElementById('dogStatus').value,
-  }));
+  localStorage.setItem('totoWeight', document.getElementById('dogWeight').value);
 }
 
 function loadProfile() {
-  const p = localStorage.getItem('dogProfile');
-  if (!p) return;
-  const d = JSON.parse(p);
-  if (d.name)   document.getElementById('dogName').value   = d.name;
-  if (d.weight) document.getElementById('dogWeight').value = d.weight;
-  if (d.age)    document.getElementById('dogAge').value    = d.age;
-  if (d.status) document.getElementById('dogStatus').value = d.status;
-  calcDailyKcal();
+  const w = localStorage.getItem('totoWeight');
+  if (w) {
+    document.getElementById('dogWeight').value = w;
+    calcDailyKcal();
+  }
 }
 
 function calcDailyKcal() {
   saveProfile();
-  const w = parseFloat(document.getElementById('dogWeight').value);
-  const age    = document.getElementById('dogAge').value;
-  const status = document.getElementById('dogStatus').value;
-  const el = document.getElementById('kcalResult');
+  const w   = parseFloat(document.getElementById('dogWeight').value);
+  const el  = document.getElementById('kcalResult');
 
   if (!w || w <= 0) { el.style.display = 'none'; return; }
+
+  const age = getTotoAgeCategory();
 
   // RER = 70 × BW(kg)^0.75
   const rer = 70 * Math.pow(w, 0.75);
   const factors = {
-    puppy:       { f:3.0, note:'성장기는 에너지 요구량이 성견의 약 2배입니다.' },
-    adult:       { f: status === 'neutered' ? 1.6 : status === 'overweight' ? 1.0 : 1.8,
-                   note: status === 'neutered' ? '중성화 성견 기준 (RER × 1.6).'
-                       : status === 'overweight' ? '체중 감량 시 RER(기초대사량) 수준으로만 급여합니다.'
-                       : '미중성화 성견 기준 (RER × 1.8).' },
-    senior:      { f:1.4, note:'노령견은 기초대사량이 낮아 칼로리를 줄여야 합니다.' },
+    puppy:  { f: 3.0, note: '성장기 기준 (RER × 3.0).' },
+    adult:  { f: 1.6, note: '중성화 성견 기준 (RER × 1.6).' },
+    senior: { f: 1.4, note: '노령견 기준 (RER × 1.4). 칼로리를 조금 줄여주세요.' },
   };
   const { f, note } = factors[age];
   const daily = Math.round(rer * f);
