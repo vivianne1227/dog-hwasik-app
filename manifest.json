@@ -1,0 +1,20 @@
+{
+  "name": "강아지 화식 레시피",
+  "short_name": "화식앱",
+  "description": "재료를 선택하면 강아지 맞춤 화식 레시피와 칼로리를 알려드려요",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FFF8F0",
+  "theme_color": "#E07B39",
+  "orientation": "portrait-primary",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": []
+}
